@@ -6,6 +6,7 @@ type APIConfig = {
   fileserverHits: number;
   db: DBConfig;
   platform: string;
+  token: string;
 };
 
 type DBConfig  = {
@@ -21,7 +22,8 @@ export var config: APIConfig = {
         migrationsFolder: "./src/db/base_migration"
       }
     },
-    platform: envOrThrow("PLATFORM")
+    platform: envOrThrow("PLATFORM"),
+    token: envOrThrow("TOKEN")
 }
 
 function envOrThrow(key: string): string {

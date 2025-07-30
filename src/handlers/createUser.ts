@@ -3,14 +3,18 @@ import { nextTick } from "process";
 import { BadJSONError, ChirpTooLongError, BadEmail } from "../erroes.js";
 import { createUser } from "../db/queries/users.js";
 import { NewUser } from "../schema.js";
+import { hashPassword } from "../auth.js";
 
 export async function handlerCreateUser(req:express.Request, res:express.Response, next:express.NextFunction): Promise<void> {
     console.log("HANDLER: handlerCreateUser")
 
     try {
         type incomingEmail = {
+            password: string;
             email: string;
         };
+
+        // type resultsWithoutPassword = Omit<>
 
         let body = "";
 
@@ -27,10 +31,11 @@ export async function handlerCreateUser(req:express.Request, res:express.Respons
         }
 
         let u: NewUser = {
-            email: input.email
+            hashed_password: await hashPassword(input.password),
+            email: input.email,
         };
 
-        let results = await createUser(u);
+        let results: Omit<any, "hashed_password"> = await createUser(u);
 
         res.status(201).send(results);
 
