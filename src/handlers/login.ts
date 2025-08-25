@@ -3,17 +3,19 @@ import express from "express";
 import { config } from "../config.js";
 import { BadJSONError, ChirpTooLongError, BadEmail } from "../erroes.js";
 import { createUser, getUser } from "../db/queries/users.js";
-import { NewUser } from "../schema.js";
-import { hashPassword, checkPasswordHash, makeJWT } from "../auth.js";
+import { NewUser, NewRefreshToken } from "../schema.js";
+import { hashPassword, checkPasswordHash, makeJWT, makeRefreshToken } from "../auth.js";
+import { ref } from "process";
+import { addRefreshToken } from "../db/queries/getRefreshToken.js";
 
 export async function handlerLogin(req:express.Request, res:express.Response, next:express.NextFunction): Promise<void> {
-    console.log("HANDLER: handlerCreateUser")
+    console.log("HANDLER: handlerLogin")
 
     try {
         type incomingEmail = {
             password: string;
             email: string;
-            expiresInSeconds: number;
+            // expiresInSeconds: number;
         };
 
         // type resultsWithoutPassword = Omit<>
@@ -47,16 +49,30 @@ export async function handlerLogin(req:express.Request, res:express.Response, ne
             throw error;
         }
 
-        let expiresInSeconds = (typeof input.expiresInSeconds === "undefined" || input.expiresInSeconds > 3600) 
-                               ? 3600 : input.expiresInSeconds;
+        // let expiresInSeconds = (typeof input.expiresInSeconds === "undefined" || input.expiresInSeconds > 3600) 
+        //                        ? 3600 : input.expiresInSeconds;
 
-        let token = makeJWT(u.id as string, expiresInSeconds, config.token)
+        let token = makeJWT(u.id as string, 3600 * 1000, config.token)
+
+        let refresh_token: NewRefreshToken = {
+            token: makeRefreshToken(),
+            user_id: u.id as string,
+            expiresAt: new Date((new Date()).getTime() + 1000 * 60 * 60 * 24 * 60),
+            revokedAt: null,
+        };
+
+        await addRefreshToken(refresh_token);
+
+        type UserWithout =  Omit<any, "hashed_password">;
         
-        let results: Omit<any, "hashed_password"> = u;
+        let results: UserWithout = u;
+
+        delete results.hashed_password;
 
         res.status(200).send({
             ...results,
-            token: token,                 
+            token: token,
+            refreshToken: refresh_token,
         });
 
         // console.log(results);

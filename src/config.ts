@@ -7,6 +7,7 @@ type APIConfig = {
   db: DBConfig;
   platform: string;
   token: string;
+  polka_key: string;
 };
 
 type DBConfig  = {
@@ -23,7 +24,8 @@ export var config: APIConfig = {
       }
     },
     platform: envOrThrow("PLATFORM"),
-    token: envOrThrow("TOKEN")
+    token: envOrThrow("TOKEN"),
+    polka_key: envOrThrow("POLKA_KEY")
 }
 
 function envOrThrow(key: string): string {

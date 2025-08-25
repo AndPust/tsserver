@@ -35,7 +35,11 @@ export async function handlerCreateUser(req:express.Request, res:express.Respons
             email: input.email,
         };
 
-        let results: Omit<any, "hashed_password"> = await createUser(u);
+        type UserWithout = Omit<any, "hashed_password">;
+
+        let results: UserWithout = await createUser(u);
+
+        delete results.hashed_password;
 
         res.status(201).send(results);
 

@@ -3,7 +3,7 @@ import express from "express";
 import { config } from "../config.js";
 import { nextTick } from "process";
 
-import { BadJSONError, ChirpTooLongError } from "../erroes.js";
+import { BadJSONError, ChirpTooLongError, BadTokenError } from "../erroes.js";
 import { addChirp } from "../db/queries/chirp.js";
 import { NewChirp } from "../schema.js";
 import { getBearerToken, validateJWT } from "../auth.js";
@@ -27,18 +27,21 @@ export async function handlerAddChirps(req:express.Request, res:express.Response
             throw new BadJSONError("Invalid JSON");
         }
 
-        res.set("Content-Type", "application/json");
-
+        
         let bearer_token = getBearerToken(req);
-
-        let user_id = validateJWT(bearer_token, config.token)
-
+        let user_id: string;
+        try {
+            user_id = validateJWT(bearer_token, config.token)
+        } catch (error) {
+            throw new BadTokenError("Token validation failure!");
+        }
+        
         if(input.body.length > 140) {
             throw new ChirpTooLongError("The chirp is too long!");
         }
 
         let output = input.body;
-
+        
         let badWords = ["kerfuffle", "sharbert", "fornax"]
 
         for (let s of badWords) {
@@ -48,17 +51,18 @@ export async function handlerAddChirps(req:express.Request, res:express.Response
                 output = output.replace(sU, "****");
             }
         }
-
+        
         let c: NewChirp = {
             body: output,
             user_id: user_id
         }
 
         let results = await addChirp(c);
-
+        
         // console.log("just added a chirp!")
         // console.log(results)
-
+        
+        res.set("Content-Type", "application/json");
         res.status(201).send({
             id: results.id,
             createdAt: results.createdAt,

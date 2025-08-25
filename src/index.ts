@@ -4,13 +4,18 @@ import { handlerReadiness } from "./handlers/readiness.js";
 import { handlerShowHits } from "./handlers/showHits.js";
 import { handlerValidateChirp } from "./handlers/validateChirp.js";
 import { handlerCreateUser } from "./handlers/createUser.js";
+import { handlerUpdateUser } from "./handlers/updateUser.js";
 import { handlerAddChirps } from "./handlers/chirps.js";
 import { handlerGetChirps } from "./handlers/getChirps.js";
 import { handlerGetChirpsByID } from "./handlers/getChirpsByID.js";
+import { handlerDeleteChirps } from "./handlers/deleteChirps.js";
+import { handlerRefreshToken } from "./handlers/refreshToken.js";
+import { handlerRevokeToken } from "./handlers/revokeToken.js";
 import { errorHandler } from "./handlers/serverError.js";
 import { handlerLogin } from "./handlers/login.js";
 import { middlewareLogResponses } from "./middleware/logResponser.js";
 import { logAmountOfResponses } from "./middleware/logAmountOfResponses.js";
+import { handlerMakeRed } from "./handlers/makeRed.js";
 // import { config } from "./config.js";
 
 const app = express();
@@ -35,6 +40,8 @@ app.post("/admin/reset", handlerShowHits);
 
 app.post("/api/users", handlerCreateUser);
 
+app.put("/api/users", handlerUpdateUser);
+
 app.post("/api/login", handlerLogin);
 
 app.get("/api/chirps", handlerGetChirps);
@@ -42,6 +49,14 @@ app.get("/api/chirps", handlerGetChirps);
 app.get("/api/chirps/:chirpID", handlerGetChirpsByID);
 
 app.post("/api/chirps", handlerAddChirps);
+
+app.delete("/api/chirps/:chirpID", handlerDeleteChirps);
+
+app.post("/api/refresh", handlerRefreshToken);
+
+app.post("/api/revoke", handlerRevokeToken);
+
+app.post("/api/polka/webhooks", handlerMakeRed);
 
 app.use(errorHandler);
 
